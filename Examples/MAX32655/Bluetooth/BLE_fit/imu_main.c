@@ -110,13 +110,9 @@ static imuConn_t *imuFindNextToSend(uint8_t cccIdx)
 static uint8_t imuBuild(dmConnId_t connId, uint8_t **pBuf, imuData_t *pLatestImuData)
 {
   uint8_t   *pImuData;
-#if DATA_LEN_8
-  uint8_t   len = 8; /* TODO: Try to make this dynamic with sizeof and likely Start with 9 => 1 byte for identity and 8 bytes of data */
-#else
-  uint8_t   len = 2; /* TODO: 2 for demo purpose */
-#endif // DATA_LEN_8
+  uint8_t   len = QUATERNION_DATA_LEN;
   uint8_t   maxLen = AttGetMtu(connId) - ATT_VALUE_NTF_LEN;
-
+  // APP_TRACE_INFO2("Maxlen %d Sending %d\n", maxLen, len);
   /* Adjust length if necessary */
   if (len > maxLen)
   {
@@ -130,19 +126,46 @@ static uint8_t imuBuild(dmConnId_t connId, uint8_t **pBuf, imuData_t *pLatestImu
     pImuData = *pBuf;
     /* qX, qY, qZ, qW */
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu1.qX);
-#if DATA_LEN_8
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu1.qY);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu1.qZ);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu1.qW);
-#endif // DATA_LEN_8
+#if QUATERNION_DATA_LEN >= 16
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu2.qX);
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu2.qY);
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu2.qZ);
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu2.qW);
+#if QUATERNION_DATA_LEN >= 24
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu3.qX);
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu3.qY);
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu3.qZ);
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu3.qW);
+#if QUATERNION_DATA_LEN >= 32
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu4.qX);
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu4.qY);
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu4.qZ);
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu4.qW);
+#if QUATERNION_DATA_LEN >= 40
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu5.qX);
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu5.qY);
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu5.qZ);
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu5.qW);
+#if QUATERNION_DATA_LEN >= 48
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu6.qX);
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu6.qY);
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu6.qZ);
+    UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu6.qW);
+#endif // QUATERNION_DATA_LEN 16
+#endif // QUATERNION_DATA_LEN 24
+#endif // QUATERNION_DATA_LEN 32
+#endif // QUATERNION_DATA_LEN 40
+#endif // QUATERNION_DATA_LEN 48
     /* return length */
     return (uint8_t)(pImuData - *pBuf);
   }
   return 0;
 }
 
-// TODO: remove hrm from name
-static void imuSendHrmNtf(dmConnId_t connId)
+static void imuSendNtf(dmConnId_t connId)
 {
   uint8_t *pBuf;
   uint8_t len;
@@ -151,7 +174,7 @@ static void imuSendHrmNtf(dmConnId_t connId)
   if ((len = imuBuild(connId, &pBuf, &imuCb.data)) > 0)
   {
     /* Send notification */
-    AttsHandleValueNtf(connId, IMU_GYRO_VAL_HDL, len, pBuf);
+    AttsHandleValueNtf(connId, IMU_QUATERNION_VAL_HDL, len, pBuf);
 
     /* Free allocated buffer */
     WsfBufFree(pBuf);
@@ -167,14 +190,14 @@ static void imuHandleValueCnf(attEvt_t *pMsg)
 {
   imuConn_t  *pConn;
 
-  if (pMsg->hdr.status == ATT_SUCCESS && pMsg->handle == IMU_GYRO_VAL_HDL)
+  if (pMsg->hdr.status == ATT_SUCCESS && pMsg->handle == IMU_QUATERNION_VAL_HDL)
   {
     imuCb.txReady = TRUE;
 
     /* find next connection to send (note ccc idx is stored in timer status) */
     if ((pConn = imuFindNextToSend(imuCb.measTimer.msg.status)) != NULL)
     {
-      imuSendHrmNtf(pConn->connId);
+      imuSendNtf(pConn->connId);
       imuCb.txReady = FALSE;
       pConn->imuToSend = FALSE;
     }
@@ -184,15 +207,47 @@ static void imuHandleValueCnf(attEvt_t *pMsg)
 // TODO: Meet's point
 void AppHwImuRead(imuData_t *pImu)
 {
-  ++(pImu->imu1.qX); // Simulated quaternion X value
-#if DATA_LEN_8
-  ++(pImu->imu1.qY); // Simulated quaternion Y value
-  ++(pImu->imu1.qZ); // Simulated quaternion Z value
-  ++(pImu->imu1.qW); // Simulated quaternion W value
-  APP_TRACE_INFO4("qX = %x qY = %x, qZ = %x, qW = %x\n", pImu->imu1.qX, pImu->imu1.qY, pImu->imu1.qZ, pImu->imu1.qW);
-#else
-  APP_TRACE_INFO1("qX = %x", pImu->imu1.qX);
-#endif // DATA_LEN_8
+  ++(pImu->imu1.qX); // IMU1 Simulated quaternion X value
+  ++(pImu->imu1.qY); // IMU1 Simulated quaternion Y value
+  ++(pImu->imu1.qZ); // IMU1 Simulated quaternion Z value
+  ++(pImu->imu1.qW); // IMU1 Simulated quaternion W value
+  APP_TRACE_INFO4("IMU1 qX = %x qY = %x, qZ = %x, qW = %x\n", pImu->imu1.qX, pImu->imu1.qY, pImu->imu1.qZ, pImu->imu1.qW);
+#if QUATERNION_DATA_LEN >= 16
+  ++(pImu->imu2.qX); // IMU2 Simulated quaternion X value
+  ++(pImu->imu2.qY); // IMU2 Simulated quaternion Y value
+  ++(pImu->imu2.qZ); // IMU2 Simulated quaternion Z value
+  ++(pImu->imu2.qW); // IMU2 Simulated quaternion W value
+  APP_TRACE_INFO4("IMU2 qX = %x qY = %x, qZ = %x, qW = %x\n", pImu->imu2.qX, pImu->imu2.qY, pImu->imu2.qZ, pImu->imu2.qW);
+#if QUATERNION_DATA_LEN >= 24
+  ++(pImu->imu3.qX); // IMU3 Simulated quaternion X value
+  ++(pImu->imu3.qY); // IMU3 Simulated quaternion Y value
+  ++(pImu->imu3.qZ); // IMU3 Simulated quaternion Z value
+  ++(pImu->imu3.qW); // IMU3 Simulated quaternion W value
+  APP_TRACE_INFO4("IMU3 qX = %x qY = %x, qZ = %x, qW = %x\n", pImu->imu3.qX, pImu->imu3.qY, pImu->imu3.qZ, pImu->imu3.qW);  
+#if QUATERNION_DATA_LEN >= 32
+  ++(pImu->imu4.qX); // IMU4 Simulated quaternion X value
+  ++(pImu->imu4.qY); // IMU4 Simulated quaternion Y value
+  ++(pImu->imu4.qZ); // IMU4 Simulated quaternion Z value
+  ++(pImu->imu4.qW); // IMU4 Simulated quaternion W value
+  APP_TRACE_INFO4("IMU4 qX = %x qY = %x, qZ = %x, qW = %x\n", pImu->imu4.qX, pImu->imu4.qY, pImu->imu4.qZ, pImu->imu4.qW);
+#if QUATERNION_DATA_LEN >= 40
+  ++(pImu->imu5.qX); // IMU5 Simulated quaternion X value
+  ++(pImu->imu5.qY); // IMU5 Simulated quaternion Y value
+  ++(pImu->imu5.qZ); // IMU5 Simulated quaternion Z value
+  ++(pImu->imu5.qW); // IMU5 Simulated quaternion W value
+  APP_TRACE_INFO4("IMU5 qX = %x qY = %x, qZ = %x, qW = %x\n", pImu->imu5.qX, pImu->imu5.qY, pImu->imu5.qZ, pImu->imu5.qW);
+#if QUATERNION_DATA_LEN >= 48
+  ++(pImu->imu6.qX); // IMU6 Simulated quaternion X value
+  ++(pImu->imu6.qY); // IMU6 Simulated quaternion Y value
+  ++(pImu->imu6.qZ); // IMU6 Simulated quaternion Z value
+  ++(pImu->imu6.qW); // IMU6 Simulated quaternion W value
+  APP_TRACE_INFO4("IMU6 qX = %x qY = %x, qZ = %x, qW = %x\n", pImu->imu6.qX, pImu->imu6.qY, pImu->imu6.qZ, pImu->imu6.qW);
+#endif // QUATERNION_DATA_LEN 16
+#endif // QUATERNION_DATA_LEN 24
+#endif // QUATERNION_DATA_LEN 32
+#endif // QUATERNION_DATA_LEN 40
+#endif // QUATERNION_DATA_LEN 48
+
 }
 
 void ImuMeasTimerExp(wsfMsgHdr_t *pMsg)
@@ -213,7 +268,7 @@ void ImuMeasTimerExp(wsfMsgHdr_t *pMsg)
       /* find next connection to send (note ccc idx is stored in timer status) */
       if ((pConn = imuFindNextToSend(pMsg->status)) != NULL)
       {
-        imuSendHrmNtf(pConn->connId);
+        imuSendNtf(pConn->connId);
         imuCb.txReady = FALSE;
         pConn->imuToSend = FALSE;
       }

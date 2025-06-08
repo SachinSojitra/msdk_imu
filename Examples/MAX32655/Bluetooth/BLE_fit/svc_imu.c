@@ -44,36 +44,33 @@
 #define IMU_SEC_PERMIT_WRITE SVC_SEC_PERMIT_WRITE
 #endif
 
-/* Custom UUIDs for IMU Service and Characteristics (LSB) */
+/* Custom UUIDs for IMU Service and Quaternion Characteristic (LSB) */
 // IMU Service: 12345678-1234-1234-1234-1234567890AB
 static const uint8_t imuServiceUuid[] = {0xAB, 0x90, 0x78, 0x56, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x78, 0x56, 0x34, 0x12};
-// Gyroscope Characteristic: 12345678-1234-1234-1234-1234567890AC
-#define GYRO_CHAR_UUID 0xAC, 0x90, 0x78, 0x56, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x78, 0x56, 0x34, 0x12
-static const uint8_t gyroCharUuid[] = {GYRO_CHAR_UUID};
+// Quaternion Characteristic: 12345678-1234-1234-1234-1234567890AC
+#define QUATERNION_CHAR_UUID 0xAC, 0x90, 0x78, 0x56, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x78, 0x56, 0x34, 0x12
+static const uint8_t quaterCharUuid[] = {QUATERNION_CHAR_UUID};
 
-// IMU Service Declaration
-// static const uint8_t imuService[] = {UINT16_TO_BYTES(0x180D)}; // Example UUID
-// static const uint16_t imuServiceLen = size0x00, 0x00of(imuService);
+// IMU Service Declaration Variables
 static const uint16_t imuServiceLen = sizeof(imuServiceUuid);
 
-/* Gyroscope */ 
-// Gyroscope Characteristic Declaration
-static const uint8_t gyroChar[] = {ATT_PROP_NOTIFY, 
-                                    UINT16_TO_BYTES(IMU_GYRO_VAL_HDL),
-                                    GYRO_CHAR_UUID};
-static const uint16_t gyroCharLen = sizeof(gyroChar);
-// Gyroscope Characteristic Value
-#if DATA_LEN_8
-static uint8_t gyroVal[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // TODO: Make this 8 + 1 bytes
-#else
-static uint8_t gyroVal[] = {0x00, 0x00}; // TODO: Make this 8 or 8 + 1 bytes
-#endif // DATA_LEN_8
-static const uint16_t gyroValLen = sizeof(gyroVal);
-// Gyroscope client characteristic configuration
-static uint8_t gyroCcc[] = {UINT16_TO_BYTES(0x0000)};
-static const uint16_t gyroCccLen = sizeof(gyroCcc);
-static const uint8_t gyroDesc[] = "IMU Sensor";  // or any custom name
-static const uint16_t gyroDescLen = sizeof(gyroDesc);
+// Quaternion Characteristic Declaration Variables
+static const uint8_t quaterChar[] = {ATT_PROP_NOTIFY, 
+                                    UINT16_TO_BYTES(IMU_QUATERNION_VAL_HDL),
+                                    QUATERNION_CHAR_UUID};
+static const uint16_t quaterCharLen = sizeof(quaterChar);
+
+// Quaternion Characteristic Value Variables
+static uint8_t quaterVal[QUATERNION_DATA_LEN] = {0x00};
+static const uint16_t quaterValLen = sizeof(quaterVal);
+
+// Quaternion client characteristic configuration Variables
+static uint8_t quaterCcc[] = {UINT16_TO_BYTES(0x0000)};
+static const uint16_t quaterCccLen = sizeof(quaterCcc);
+
+// Quaternion Characteristic User Description (optional)
+static const uint8_t quaterDesc[] = "Quaternion Sensor Value";
+static const uint16_t quaterDescLen = sizeof(quaterDesc);
 
 // Attribute List for IMU Service
 static const attsAttr_t imuAttrList[] = {
@@ -86,39 +83,39 @@ static const attsAttr_t imuAttrList[] = {
         0, // No special settings
         ATTS_PERMIT_READ
     },
-    // Gyroscope Characteristic Declaration
+    // Quaternion Characteristic Declaration
     {
         attChUuid,
-        (uint8_t *)gyroChar,
-        (uint16_t *)&gyroCharLen,
-        sizeof(gyroChar),
+        (uint8_t *)quaterChar,
+        (uint16_t *)&quaterCharLen,
+        sizeof(quaterChar),
         0, // No special settings
         ATTS_PERMIT_READ
     },
-    // Gyroscope Characteristic Value
+    // Quaternion Characteristic Value
     {
-        gyroCharUuid,           // Full 128-bit UUID
-        (uint8_t *)gyroVal,     // Value will be updated dynamically
-        (uint16_t *)&gyroValLen,
-        sizeof(gyroVal),
+        quaterCharUuid,           // Full 128-bit UUID
+        (uint8_t *)quaterVal,     // Value will be updated dynamically
+        (uint16_t *)&quaterValLen,
+        sizeof(quaterVal),
         ATTS_SET_UUID_128,      // 128-bit UUID
         ATTS_PERMIT_READ
     },
-    // // Gyroscope Characteristic User Description
-    // {
-    //     attChUserDescUuid,
-    //     (uint8_t *)gyroDesc,
-    //     (uint16_t *)&gyroDescLen,
-    //     sizeof(gyroDesc),
-    //     0, // No special settings
-    //     ATTS_PERMIT_READ
-    // },
-    // Gyroscope CCCD
+    // Quaternion Characteristic User Description
+    {
+        attChUserDescUuid,
+        (uint8_t *)quaterDesc,
+        (uint16_t *)&quaterDescLen,
+        sizeof(quaterDesc),
+        0, // No special settings
+        ATTS_PERMIT_READ
+    },
+    // Quaternion CCCD
     {
         attCliChCfgUuid,
-        (uint8_t *)gyroCcc,
-        (uint16_t *)&gyroCccLen,
-        sizeof(gyroCcc),
+        (uint8_t *)quaterCcc,
+        (uint16_t *)&quaterCccLen,
+        sizeof(quaterCcc),
         ATTS_SET_CCC,
         (ATTS_PERMIT_READ | ATTS_PERMIT_WRITE)
     }

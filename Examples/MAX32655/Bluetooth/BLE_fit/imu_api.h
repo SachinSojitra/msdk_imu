@@ -26,7 +26,7 @@
 
 #include "wsf_timer.h"
 #include "att_api.h"
-#include "svc_imu.h" // To get DATA_LEN_8 macro
+#include "svc_imu.h" // To get QUATERNION_DATA_LEN macro
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,22 +51,30 @@ typedef struct
 typedef struct
 {
   int16_t           qX;               /*!< \brief Quanterian X-axis measurement */
-#if DATA_LEN_8
   int16_t           qY;               /*!< \brief Quanterian Y-axis measurement */
   int16_t           qZ;               /*!< \brief Quanterian Z-axis measurement */
   int16_t           qW;              /*!< \brief Quanterian X-axis measurement */
-#endif // DATA_LEN_8
 } singleImuData_t;
 
 /*! \brief All IMU measurement structure */
 typedef struct
 {
   singleImuData_t         imu1;                 /*!< \brief IMU1 measurement */
-  // singleImuData_t         imu2;                 /*!< \brief IMU2 measurement */
-  // singleImuData_t         imu3;                 /*!< \brief IMU3 measurement */
-  // singleImuData_t         imu4;                 /*!< \brief IMU4 measurement */
-  // singleImuData_t         imu5;                 /*!< \brief IMU5 measurement */
-  // singleImuData_t         imu6;                 /*!< \brief IMU6 measurement */
+#if QUATERNION_DATA_LEN >= 16
+  singleImuData_t         imu2;                 /*!< \brief IMU2 measurement */
+#if QUATERNION_DATA_LEN >= 24
+  singleImuData_t         imu3;                 /*!< \brief IMU3 measurement */
+#if QUATERNION_DATA_LEN >= 32
+  singleImuData_t         imu4;                 /*!< \brief IMU4 measurement */
+#if QUATERNION_DATA_LEN >= 40
+  singleImuData_t         imu5;                 /*!< \brief IMU5 measurement */
+#if QUATERNION_DATA_LEN >= 48
+  singleImuData_t         imu6;                 /*!< \brief IMU6 measurement */
+#endif // QUATERNION_DATA_LEN 16
+#endif // QUATERNION_DATA_LEN 24
+#endif // QUATERNION_DATA_LEN 32
+#endif // QUATERNION_DATA_LEN 40
+#endif // QUATERNION_DATA_LEN 48
 } imuData_t;
 
 /*************************************************************************************************/

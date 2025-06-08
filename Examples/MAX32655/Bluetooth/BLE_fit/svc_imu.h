@@ -35,8 +35,8 @@ extern "C" {
 /**************************************************************************************************
   Macros
 **************************************************************************************************/
-// This is for demo purpose whether to send 2 bytes value or 8 bytes value
-#define DATA_LEN_8 1
+// Demo purpose. Decides how many quaternion data needs to be send. Possible values: 8, 16, 24, 32, 40, 48
+#define QUATERNION_DATA_LEN 16
 
 /** \name IMU Error Codes
  *
@@ -64,10 +64,10 @@ extern "C" {
 enum
 {
   IMU_SVC_HDL = IMU_START_HDL,      /*!< \brief IMU service declaration */
-  IMU_GYRO_CH_HDL,                   /*!< \brief IMU gyroscope measurement characteristic */
-  IMU_GYRO_VAL_HDL,                  /*!< \brief IMU gyroscope measurement */
-  // IMU_GYRO_CH_DESCRIPT_HDL,           /*!< \brief IMU gyroscope characteristic descriptor */
-  IMU_GYRO_CH_CCC_HDL,               /*!< \brief IMU gyroscope measurement client characteristic configuration */
+  IMU_QUATERNION_CH_HDL,            /*!< \brief IMU quaternion measurement characteristic */
+  IMU_QUATERNION_VAL_HDL,           /*!< \brief IMU quaternion measurement */
+  IMU_QUATERNION_DESC_HDL,          /*!< \brief IMU quaternion measurement user description */
+  IMU_QUATERNION_CH_CCC_HDL,        /*!< \brief IMU quaternion measurement client characteristic configuration */
   IMU_MAX_HDL                       /*!< \brief Maximum handle. */
 };
 /**@}*/
