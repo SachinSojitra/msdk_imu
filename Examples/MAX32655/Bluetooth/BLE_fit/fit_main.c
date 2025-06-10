@@ -130,6 +130,14 @@ static const appUpdateCfg_t fitUpdateCfg = {
     5 /*! Number of update attempts before giving up */
 };
 
+/*! ATT configurable parameters (increase MTU) */
+static const attCfg_t periphAttCfg = {
+    60, /* ATT server service discovery connection idle timeout in seconds */
+    FIT_APP_ATT_MAX_MTU, /* desired ATT MTU */
+    ATT_MAX_TRANS_TIMEOUT, /* transcation timeout in seconds */
+    4 /* number of queued prepare writes supported by server */
+};
+
 /*! heart rate measurement configuration */
 static const hrpsCfg_t fitHrpsCfg = {
     2000 /*! Measurement timer expiration period in ms */
@@ -758,6 +766,7 @@ void FitHandlerInit(wsfHandlerId_t handlerId)
     pAppSlaveCfg = (appSlaveCfg_t *)&fitSlaveCfg;
     pAppSecCfg = (appSecCfg_t *)&fitSecCfg;
     pAppUpdateCfg = (appUpdateCfg_t *)&fitUpdateCfg;
+    pAttCfg = (attCfg_t *)&periphAttCfg;
 
     /* Initialize application framework */
     AppSlaveInit();

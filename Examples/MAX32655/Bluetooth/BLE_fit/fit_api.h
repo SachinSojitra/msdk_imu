@@ -41,6 +41,22 @@ extern "C" {
 #define FIT_CONN_MAX 1
 #endif
 
+/*! \brief Increase MTU size to accomodate all IMUs and their ID
+- by default MTU size is  is 23 by default - including 3 bytes ATT protocol header
+- 8*6 (for all 6 IMUs) + 8 bytes for IMU ids + 8 extra bytes + 3 bytes att header */
+#define FIT_APP_ATT_MAX_MTU 67
+
+/*! \brief 1 if creating fw for upper body controller othewise 0, should be passed as cmd arg to make */
+#ifndef IMU_UPPER_BODY_SENSOR
+#define IMU_UPPER_BODY_SENSOR 1
+#endif
+
+/*! \brief Used to determine starting id of lower body IMUs e.g. it will start from 7 */
+#define UPPER_BODY_IMU_COUNT 6
+
+/*! \brief Demo purpose. Decides how many quaternion data needs to be send. Possible values: 8, 16, 24, 32, 40, 48 */
+#define QUATERNION_DATA_LEN 48
+
 /**************************************************************************************************
   Function Declarations
 **************************************************************************************************/

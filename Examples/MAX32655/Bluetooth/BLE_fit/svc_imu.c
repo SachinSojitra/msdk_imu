@@ -29,6 +29,8 @@
 #include "svc_ch.h"
 #include "svc_imu.h"
 #include "svc_cfg.h"
+#include "fit_api.h" // to get QUATERNION_DATA_LEN macro
+#include "imu_api.h" // to get singleImuData_t struct
 
 /**************************************************************************************************
   Macros
@@ -61,8 +63,8 @@ static const uint8_t quaterChar[] = {ATT_PROP_NOTIFY,
 static const uint16_t quaterCharLen = sizeof(quaterChar);
 
 // Quaternion Characteristic Value Variables
-static uint8_t quaterVal[QUATERNION_DATA_LEN] = {0x00};
-static const uint16_t quaterValLen = sizeof(quaterVal);
+static uint8_t quaterVal[QUATERNION_DATA_LEN + (QUATERNION_DATA_LEN/sizeof(singleImuData_t))] = {0x00};
+static const uint16_t quaterValLen = sizeof(singleImuData_t); // By default sizeof(singleImuData_t) but can be up to QUATERNION_DATA_LEN at runtime.
 
 // Quaternion client characteristic configuration Variables
 static uint8_t quaterCcc[] = {UINT16_TO_BYTES(0x0000)};

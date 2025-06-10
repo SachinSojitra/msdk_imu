@@ -26,7 +26,7 @@
 
 #include "wsf_timer.h"
 #include "att_api.h"
-#include "svc_imu.h" // To get QUATERNION_DATA_LEN macro
+#include "fit_api.h" // To get QUATERNION_DATA_LEN macro
 
 #ifdef __cplusplus
 extern "C" {

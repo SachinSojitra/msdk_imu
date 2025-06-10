@@ -110,9 +110,10 @@ static imuConn_t *imuFindNextToSend(uint8_t cccIdx)
 static uint8_t imuBuild(dmConnId_t connId, uint8_t **pBuf, imuData_t *pLatestImuData)
 {
   uint8_t   *pImuData;
-  uint8_t   len = QUATERNION_DATA_LEN;
+  uint8_t   len = QUATERNION_DATA_LEN + (QUATERNION_DATA_LEN / sizeof(singleImuData_t)); // TODO: Make this dynamic based on quaternion count
+  uint8_t   sensorId = (IMU_UPPER_BODY_SENSOR ? 1 : (1 + UPPER_BODY_IMU_COUNT));
   uint8_t   maxLen = AttGetMtu(connId) - ATT_VALUE_NTF_LEN;
-  // APP_TRACE_INFO2("Maxlen %d Sending %d\n", maxLen, len);
+  APP_TRACE_INFO2("Maxlen %d Sending %d\n", maxLen, len);
   /* Adjust length if necessary */
   if (len > maxLen)
   {
@@ -125,31 +126,37 @@ static uint8_t imuBuild(dmConnId_t connId, uint8_t **pBuf, imuData_t *pLatestImu
     /* Add data to buffer */
     pImuData = *pBuf;
     /* qX, qY, qZ, qW */
+    UINT8_TO_BSTREAM(pImuData, sensorId++);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu1.qX);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu1.qY);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu1.qZ);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu1.qW);
 #if QUATERNION_DATA_LEN >= 16
+    UINT8_TO_BSTREAM(pImuData, sensorId++);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu2.qX);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu2.qY);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu2.qZ);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu2.qW);
 #if QUATERNION_DATA_LEN >= 24
+    UINT8_TO_BSTREAM(pImuData, sensorId++);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu3.qX);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu3.qY);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu3.qZ);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu3.qW);
 #if QUATERNION_DATA_LEN >= 32
+    UINT8_TO_BSTREAM(pImuData, sensorId++);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu4.qX);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu4.qY);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu4.qZ);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu4.qW);
 #if QUATERNION_DATA_LEN >= 40
+    UINT8_TO_BSTREAM(pImuData, sensorId++);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu5.qX);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu5.qY);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu5.qZ);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu5.qW);
 #if QUATERNION_DATA_LEN >= 48
+    UINT8_TO_BSTREAM(pImuData, sensorId++);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu6.qX);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu6.qY);
     UINT16_TO_BSTREAM(pImuData, (uint16_t)pLatestImuData->imu6.qZ);
@@ -204,50 +211,49 @@ static void imuHandleValueCnf(attEvt_t *pMsg)
   }
 }
 
-// TODO: Meet's point
+// TODO: Meet's point. Currently dummy values
 void AppHwImuRead(imuData_t *pImu)
 {
   ++(pImu->imu1.qX); // IMU1 Simulated quaternion X value
   ++(pImu->imu1.qY); // IMU1 Simulated quaternion Y value
   ++(pImu->imu1.qZ); // IMU1 Simulated quaternion Z value
   ++(pImu->imu1.qW); // IMU1 Simulated quaternion W value
-  APP_TRACE_INFO4("IMU1 qX = %x qY = %x, qZ = %x, qW = %x\n", pImu->imu1.qX, pImu->imu1.qY, pImu->imu1.qZ, pImu->imu1.qW);
+  APP_TRACE_INFO4("IMU1 qX = %x qY = %x, qZ = %x, qW = %x", pImu->imu1.qX, pImu->imu1.qY, pImu->imu1.qZ, pImu->imu1.qW);
 #if QUATERNION_DATA_LEN >= 16
   ++(pImu->imu2.qX); // IMU2 Simulated quaternion X value
   ++(pImu->imu2.qY); // IMU2 Simulated quaternion Y value
   ++(pImu->imu2.qZ); // IMU2 Simulated quaternion Z value
   ++(pImu->imu2.qW); // IMU2 Simulated quaternion W value
-  APP_TRACE_INFO4("IMU2 qX = %x qY = %x, qZ = %x, qW = %x\n", pImu->imu2.qX, pImu->imu2.qY, pImu->imu2.qZ, pImu->imu2.qW);
+  APP_TRACE_INFO4("IMU2 qX = %x qY = %x, qZ = %x, qW = %x", pImu->imu2.qX, pImu->imu2.qY, pImu->imu2.qZ, pImu->imu2.qW);
 #if QUATERNION_DATA_LEN >= 24
   ++(pImu->imu3.qX); // IMU3 Simulated quaternion X value
   ++(pImu->imu3.qY); // IMU3 Simulated quaternion Y value
   ++(pImu->imu3.qZ); // IMU3 Simulated quaternion Z value
   ++(pImu->imu3.qW); // IMU3 Simulated quaternion W value
-  APP_TRACE_INFO4("IMU3 qX = %x qY = %x, qZ = %x, qW = %x\n", pImu->imu3.qX, pImu->imu3.qY, pImu->imu3.qZ, pImu->imu3.qW);  
+  APP_TRACE_INFO4("IMU3 qX = %x qY = %x, qZ = %x, qW = %x", pImu->imu3.qX, pImu->imu3.qY, pImu->imu3.qZ, pImu->imu3.qW);  
 #if QUATERNION_DATA_LEN >= 32
   ++(pImu->imu4.qX); // IMU4 Simulated quaternion X value
   ++(pImu->imu4.qY); // IMU4 Simulated quaternion Y value
   ++(pImu->imu4.qZ); // IMU4 Simulated quaternion Z value
   ++(pImu->imu4.qW); // IMU4 Simulated quaternion W value
-  APP_TRACE_INFO4("IMU4 qX = %x qY = %x, qZ = %x, qW = %x\n", pImu->imu4.qX, pImu->imu4.qY, pImu->imu4.qZ, pImu->imu4.qW);
+  APP_TRACE_INFO4("IMU4 qX = %x qY = %x, qZ = %x, qW = %x", pImu->imu4.qX, pImu->imu4.qY, pImu->imu4.qZ, pImu->imu4.qW);
 #if QUATERNION_DATA_LEN >= 40
   ++(pImu->imu5.qX); // IMU5 Simulated quaternion X value
   ++(pImu->imu5.qY); // IMU5 Simulated quaternion Y value
   ++(pImu->imu5.qZ); // IMU5 Simulated quaternion Z value
   ++(pImu->imu5.qW); // IMU5 Simulated quaternion W value
-  APP_TRACE_INFO4("IMU5 qX = %x qY = %x, qZ = %x, qW = %x\n", pImu->imu5.qX, pImu->imu5.qY, pImu->imu5.qZ, pImu->imu5.qW);
+  APP_TRACE_INFO4("IMU5 qX = %x qY = %x, qZ = %x, qW = %x", pImu->imu5.qX, pImu->imu5.qY, pImu->imu5.qZ, pImu->imu5.qW);
 #if QUATERNION_DATA_LEN >= 48
   ++(pImu->imu6.qX); // IMU6 Simulated quaternion X value
   ++(pImu->imu6.qY); // IMU6 Simulated quaternion Y value
   ++(pImu->imu6.qZ); // IMU6 Simulated quaternion Z value
   ++(pImu->imu6.qW); // IMU6 Simulated quaternion W value
-  APP_TRACE_INFO4("IMU6 qX = %x qY = %x, qZ = %x, qW = %x\n", pImu->imu6.qX, pImu->imu6.qY, pImu->imu6.qZ, pImu->imu6.qW);
+  APP_TRACE_INFO4("IMU6 qX = %x qY = %x, qZ = %x, qW = %x", pImu->imu6.qX, pImu->imu6.qY, pImu->imu6.qZ, pImu->imu6.qW);
 #endif // QUATERNION_DATA_LEN 16
 #endif // QUATERNION_DATA_LEN 24
 #endif // QUATERNION_DATA_LEN 32
 #endif // QUATERNION_DATA_LEN 40
 #endif // QUATERNION_DATA_LEN 48
-
 }
 
 void ImuMeasTimerExp(wsfMsgHdr_t *pMsg)

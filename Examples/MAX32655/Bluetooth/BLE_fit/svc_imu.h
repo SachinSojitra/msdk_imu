@@ -35,9 +35,6 @@ extern "C" {
 /**************************************************************************************************
   Macros
 **************************************************************************************************/
-// Demo purpose. Decides how many quaternion data needs to be send. Possible values: 8, 16, 24, 32, 40, 48
-#define QUATERNION_DATA_LEN 16
-
 /** \name IMU Error Codes
  *
  */
