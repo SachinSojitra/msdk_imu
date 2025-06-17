@@ -197,7 +197,7 @@ static const uint8_t fitScanDataDisc[] = {
     /*! device name */
     4, /*! length */
     DM_ADV_TYPE_LOCAL_NAME, /*! AD type */
-    'I', 'M', 'U',
+    'N', 'U', '7',
 };
 
 /**************************************************************************************************
