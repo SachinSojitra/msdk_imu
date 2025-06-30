@@ -73,8 +73,10 @@
   Global Variables
 **************************************************************************************************/
 
-/*! \brief  Pool runtime configuration. */
-static wsfBufPoolDesc_t mainPoolDesc[] = { { 16, 8 }, { 32, 4 }, { 192, 8 }, { 256, 8 } };
+/*! \brief  Pool runtime configuration. 
+- Last pool added to accomodate bigger MTU size and according to BLE_periph.md
+ the new pool size must be (new MTU size + 20) to allow for packet headers */
+static wsfBufPoolDesc_t mainPoolDesc[] = { { 16, 8 }, { 32, 4 }, { 192, 8 }, { 256, 8 }, {FIT_APP_ATT_MAX_MTU + 20}};
 
 #if defined(HCI_TR_EXACTLE) && (HCI_TR_EXACTLE == 1)
 static LlRtCfg_t mainLlRtCfg;
